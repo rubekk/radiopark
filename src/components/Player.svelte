@@ -144,7 +144,7 @@
     );
 </script>
 
-<div class="player">
+<div class={sPlayRadio ? "player anim" : "player"}>
     <div class="player-info">
         <p class="station-name">
             {sCurrentRadioStation.name
@@ -193,8 +193,7 @@
         width: 350px;
         background-color: #fff;
         color: #000;
-        border-top: 5px solid #FFCC00;
-        border-right: 5px solid #FFCC00;
+        border: 5px solid #FFCC00;
         border-radius: 3px;
     }
 
@@ -308,5 +307,35 @@
         border: 1px solid #053a5f;
         outline: 3px solid #053a5f;
         outline-offset: 0.125rem;
+    }
+
+
+    .anim {
+        border-radius: 3px;
+        animation: borderAnimation 7s infinite linear;
+    }
+
+    @keyframes borderAnimation {
+        0% {
+            border-image: linear-gradient(
+                45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
+        50% {
+            border-image: linear-gradient(
+                -45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
+        100% {
+            border-image: linear-gradient(
+                45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
     }
 </style>

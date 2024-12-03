@@ -48,11 +48,11 @@
                     if (showingUserLocation) {
                         leaflet
                             .circleMarker(userLocation, {
-                                radius: 5,
-                                color: "#dcdcdc",
-                                fillColor: "#000",
-                                fillOpacity: 0.8,
-                                weight: 1,
+                                radius: 9,
+                                color: "#797979",
+                                fillColor: "#fff",
+                                fillOpacity: 0.9,
+                                weight: 5,
                             })
                             .addTo(userLocationMarker);
 
@@ -73,7 +73,7 @@
         }
     };
 
-    const handleStataionHistory = () =>{
+    const handleStataionHistory = () => {
         if (
             !sStationHistory.some((item) => {
                 return (
@@ -97,7 +97,7 @@
                 lon: sCurrentRadioStation.geo_long,
             });
         }
-    }
+    };
 
     onMount(async () => {
         leaflet = await import("leaflet");
@@ -160,7 +160,16 @@
                 markers.push(marker);
 
                 marker.on("mouseover", (e) => {
-                    marker.setRadius(7);
+                    if (
+                        sCurrentRadioStation &&
+                        station.name === sCurrentRadioStation.name &&
+                        station.geo_lat === sCurrentRadioStation.geo_lat &&
+                        station.geo_long === sCurrentRadioStation.geo_long
+                    ) {
+                        return;
+                    }
+
+                    marker.setRadius(9);
 
                     const popup = leaflet
                         .popup()
@@ -175,6 +184,15 @@
                 });
 
                 marker.on("mouseout", () => {
+                    if (
+                        sCurrentRadioStation &&
+                        station.name === sCurrentRadioStation.name &&
+                        station.geo_lat === sCurrentRadioStation.geo_lat &&
+                        station.geo_long === sCurrentRadioStation.geo_long
+                    ) {
+                        return;
+                    }
+
                     marker.setRadius(3);
                     map.closePopup();
                 });
@@ -213,14 +231,31 @@
 
         if (markers && sCurrentRadioStation && sCurrentRadioStation.name) {
             markers.forEach((item) => {
-                item.setStyle({
-                    radius:
-                        item.name == sCurrentRadioStation.name &&
-                        item.geo_lat == sCurrentRadioStation.geo_lat &&
-                        item.geo_long == sCurrentRadioStation.geo_long
-                            ? 9
-                            : 3,
-                });
+                if (
+                    item.name === sCurrentRadioStation.name &&
+                    item.geo_lat === sCurrentRadioStation.geo_lat &&
+                    item.geo_long === sCurrentRadioStation.geo_long
+                ) {
+                    item.setStyle({
+                        radius: 9,
+                        fillColor: "#ffcc00",
+                        fillOpacity: 0.9,
+                        color: "#797979",
+                        weight: 5,
+                    });
+
+                    item.bringToFront();
+                } else {
+                    item.setStyle({
+                        radius: 3,
+                        fillColor: "#fff",
+                        fillOpacity: 0.9,
+                        color: "#000",
+                        weight: 0,
+                    });
+
+                    item.bringToBack();
+                }
             });
         }
     }
@@ -263,3 +298,4 @@
         z-index: 500;
     }
 </style>
+

@@ -41,7 +41,7 @@
             id={sCurrentRadioStation &&
             sCurrentRadioStation.name == station.name &&
             sCurrentRadioStation.geo_lat == station.geo_lat
-                ? "favorite-playing"
+                ? "anim"
                 : ""}
         >
             <div on:click={() => playFavorite(i)} class="card-left">
@@ -69,52 +69,6 @@
         background-color: #f5f5f5;
         border: 5px solid #ffcc00;
         border-radius: 3px;
-
-        border: 5px solid transparent;
-        border-radius: 10px;
-        background-image: linear-gradient(white, white);
-        background-origin: border-box;
-        background-clip: content-box, border-box;
-        animation: borderAnimation 5s infinite linear;
-    }
-
-    @keyframes borderAnimation {
-        0% {
-            border-image: linear-gradient(
-                45deg,
-                #ff0000,
-                #ff7300,
-                #fffb00,
-                #00ff00,
-                #0000ff,
-                #8a2be2
-            );
-            border-image-slice: 1;
-        }
-        50% {
-            border-image: linear-gradient(
-                135deg,
-                #ff0000,
-                #ff7300,
-                #fffb00,
-                #00ff00,
-                #0000ff,
-                #8a2be2
-            );
-            border-image-slice: 1;
-        }
-        100% {
-            border-image: linear-gradient(
-                45deg,
-                #ff0000,
-                #ff7300,
-                #fffb00,
-                #00ff00,
-                #0000ff,
-                #8a2be2
-            );
-            border-image-slice: 1;
-        }
     }
 
     .station-list h2 {
@@ -148,12 +102,8 @@
         justify-content: space-between;
         align-items: center;
         border: 1px solid #ddd;
-        border-radius: 8px;
+        border-radius: 3px;
         background-color: #fff;
-    }
-
-    #favorite-playing {
-        border-color: aqua;
     }
 
     .card-left {
@@ -189,5 +139,34 @@
 
     .card-right i:hover {
         color: #000;
+    }
+
+    #anim {
+        border: 3px solid #ddd;
+        animation: borderAnimation 7s infinite linear;
+    }
+
+    @keyframes borderAnimation {
+        0% {
+            border-image: linear-gradient(
+                45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
+        50% {
+            border-image: linear-gradient(
+                -45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
+        100% {
+            border-image: linear-gradient(
+                45deg,
+                #ffcc00, #dcdcdc, #ddff00
+            );
+            border-image-slice: 1;
+        }
     }
 </style>
