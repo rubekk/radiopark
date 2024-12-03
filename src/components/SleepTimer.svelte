@@ -25,7 +25,7 @@
 
                     sSleepTimer = "Keep playing"
                     sleepTimer.set(sSleepTimer);
-                }, 1000*30)
+                }, 1000*60*15)
                 break;
             case "30 min":
                 timer = setTimeout(() => {

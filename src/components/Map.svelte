@@ -16,6 +16,7 @@
     let userLocation = [];
     let showingUserLocation = false;
     let sRadioStations = [];
+    let plottedRadioStations = [];
     let sCurrentRadioStation = {};
     let sStationHistory = [];
     let sStationLocation = { lat: "", lon: "" };
@@ -99,65 +100,26 @@
         }
     };
 
-    onMount(async () => {
-        leaflet = await import("leaflet");
-
-        map = leaflet
-            .map("map", {
-                minZoom: 2,
-                zoomControl: false,
-            })
-            .setView([27.7172, 85.324], 5);
-
-        leaflet.control.zoom({ position: "bottomright" }).addTo(map);
-        leaflet
-            .tileLayer(
-                "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
-                {
-                    opacity: 0.8,
-                },
-            )
-            .addTo(map);
-
-        userLocationMarker = leaflet.layerGroup().addTo(map);
-
-        const globalResponse = await fetch(
-            "https://de1.api.radio-browser.info/json/stations?limit=7000",
-        );
-        const nepalResponse = await fetch(
-            "https://de1.api.radio-browser.info/json/stations/bycountry/Nepal",
-        );
-        const globalStations = await globalResponse.json();
-        const nepalStations = await nepalResponse.json();
-
-        sRadioStations = [...globalStations, ...nepalStations].filter(
-            (station) => station.geo_lat !== null && station.geo_long !== null,
-        );
-        radioStations.set(sRadioStations);
-
-        let randomNumber = Math.floor(Math.random() * sRadioStations.length);
-
-        sCurrentRadioStation = sRadioStations[randomNumber];
-        currentRadioStation.set(sCurrentRadioStation);
-
-        handleStataionHistory();
-
+    const plotLocationOnMap = () => {
         sRadioStations.forEach((station, i) => {
-            if (station.geo_lat && station.geo_long) {
+            const stationId = `${station.name}-${station.geo_lat}-${station.geo_long}`;
+
+            if (plottedRadioStations && !plottedRadioStations.includes(stationId) && station.geo_lat && station.geo_long) {
                 const marker = leaflet
-                    .circleMarker([station.geo_lat, station.geo_long], {
-                        radius: 3,
-                        fillColor: "#fff",
-                        fillOpacity: 0.9,
-                        weight: 0,
-                    })
-                    .addTo(map);
+                .circleMarker([station.geo_lat, station.geo_long], {
+                    radius: 3,
+                    fillColor: "#fff",
+                    fillOpacity: 0.9,
+                    weight: 0,
+                })
+                .addTo(map);
 
                 marker.name = station.name;
                 marker.geo_lat = station.geo_lat;
                 marker.geo_long = station.geo_long;
 
                 markers.push(marker);
+                plottedRadioStations.push(stationId);
 
                 marker.on("mouseover", (e) => {
                     if (
@@ -212,6 +174,64 @@
                 });
             }
         });
+    }
+
+    onMount(async () => {
+        leaflet = await import("leaflet");
+
+        map = leaflet
+            .map("map", {
+                minZoom: 2,
+                zoomControl: false,
+            })
+            .setView([27.7172, 85.324], 5);
+
+        leaflet.control.zoom({ position: "bottomright" }).addTo(map);
+        leaflet
+            .tileLayer(
+                "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
+                {
+                    opacity: 0.8,
+                },
+            )
+            .addTo(map);
+
+        userLocationMarker = leaflet.layerGroup().addTo(map);
+
+        const globalResponse = await fetch(
+            "https://de1.api.radio-browser.info/json/stations?limit=5000",
+        );
+        const nepalResponse = await fetch(
+            "https://de1.api.radio-browser.info/json/stations/bycountry/Nepal",
+        );
+        let globalStations = await globalResponse.json();
+        const nepalStations = await nepalResponse.json();
+
+        sRadioStations = [...globalStations, ...nepalStations].filter(
+            (station) => station.geo_lat !== null && station.geo_long !== null,
+        );
+        radioStations.set(sRadioStations);
+        
+        const fLength = sRadioStations.length;
+        let randomNumber = Math.floor(Math.random() * fLength);
+
+        sCurrentRadioStation = sRadioStations[randomNumber];
+        currentRadioStation.set(sCurrentRadioStation);
+
+        handleStataionHistory();
+        plotLocationOnMap(); 
+
+        const secondBatchResponse = await fetch(
+            "https://de1.api.radio-browser.info/json/stations?limit=5000&offset=5000",
+        );
+        const secondBatch = await secondBatchResponse.json();
+
+        const newStations = secondBatch.filter(
+            (station) => station.geo_lat !== null && station.geo_long !== null,
+        );
+        sRadioStations = [...sRadioStations, ...newStations];
+
+        plotLocationOnMap(newStations);
     });
 
     $: {
@@ -264,7 +284,11 @@
 <div class="map-container">
     <div id="map"></div>
 
-    <div on:click={handleLocateMe} class="locate-me" id={showingUserLocation ? "gradient" : ""}>
+    <div
+        on:click={handleLocateMe}
+        class="locate-me"
+        id={showingUserLocation ? "gradient" : ""}
+    >
         <i class="fa-solid fa-location-crosshairs"></i>
     </div>
 </div>
@@ -304,23 +328,13 @@
 
     @keyframes borderAnimation {
         0% {
-            background: linear-gradient(
-                45deg,
-                #ffcc00, #ddff00
-            );
+            background: linear-gradient(45deg, #ffcc00, #ddff00);
         }
         50% {
-            background: linear-gradient(
-                -45deg,
-                #ffcc00, #ddff00
-            );
+            background: linear-gradient(-45deg, #ffcc00, #ddff00);
         }
         100% {
-            background: linear-gradient(
-                45deg,
-                #ffcc00, #ddff00
-            );
+            background: linear-gradient(45deg, #ffcc00, #ddff00);
         }
     }
 </style>
-
