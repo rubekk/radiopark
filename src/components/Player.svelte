@@ -1,4 +1,5 @@
 <script>
+    import { browser } from "$app/environment";
     import {
         radioStations,
         currentRadioStation,
@@ -6,6 +7,7 @@
         favoriteStations,
         stationHistory,
         stationLocation,
+        sleepTimer,
     } from "$lib/store";
 
     let sRadioStations = [];
@@ -15,6 +17,7 @@
     let sStationHistory = [];
     let audioElem;
     let volume = 0.3;
+    let volumeIcon = "fa-volume-low";
     let isFavorite = false;
 
     radioStations.subscribe((value) => {
@@ -87,7 +90,7 @@
         sFavoriteStations = [...sFavoriteStations];
         favoriteStations.set(sFavoriteStations);
 
-        console.log(sFavoriteStations);
+        if(browser) localStorage.setItem("favorite", JSON.stringify(sFavoriteStations));
     };
 
     const handleUndo = () => {
@@ -142,6 +145,8 @@
             station.country === sCurrentRadioStation.country &&
             station.geo_lat === sCurrentRadioStation.geo_lat,
     );
+
+    $:volumeIcon = volume == 0 ? "fa-volume-mute" : volume < 0.5 ? "fa-volume-low" : "fa-volume-high";
 </script>
 
 <div class={sPlayRadio ? "player anim" : "player"}>
@@ -171,7 +176,7 @@
                 : "fa-solid fa-heart"}
         ></i>
         <i on:click={handleShuffle} class="fa-solid fa-shuffle"></i>
-        <i class="fa-solid fa-volume-low" id="volume-btn">
+        <i class={`fa-solid ${volumeIcon}`} id="volume-btn">
             <input
                 on:change={handleVolume}
                 bind:value={volume}
@@ -312,6 +317,7 @@
 
     .anim {
         border-radius: 3px;
+        box-shadow: 0 0 10px #ddff00;
         animation: borderAnimation 7s infinite linear;
     }
 

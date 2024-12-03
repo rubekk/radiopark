@@ -1,7 +1,7 @@
 <script></script>
 
 <div class="title">
-    <h1 class="title-h1">RadioLive</h1>
+    <h1 class="title-h1">Radio Park</h1>
     <p>Live Sound, All Around</p>
 </div>
 

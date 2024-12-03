@@ -15,8 +15,9 @@
     const removeFavorite = (i) => {
         sFavoriteStations.splice(i, 1);
         sFavoriteStations = [...sFavoriteStations];
-
         favoriteStations.set(sFavoriteStations);
+
+        if(browser) localStorage.setItem("favorite", JSON.stringify(sFavoriteStations));
     };
 
     const playFavorite = (i) => {

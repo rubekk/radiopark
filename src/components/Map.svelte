@@ -264,7 +264,7 @@
 <div class="map-container">
     <div id="map"></div>
 
-    <div on:click={handleLocateMe} class="locate-me">
+    <div on:click={handleLocateMe} class="locate-me" id={showingUserLocation ? "gradient" : ""}>
         <i class="fa-solid fa-location-crosshairs"></i>
     </div>
 </div>
@@ -296,6 +296,31 @@
         right: 0.5rem;
         cursor: pointer;
         z-index: 500;
+    }
+
+    #gradient {
+        animation: borderAnimation 7s infinite linear;
+    }
+
+    @keyframes borderAnimation {
+        0% {
+            background: linear-gradient(
+                45deg,
+                #ffcc00, #ddff00
+            );
+        }
+        50% {
+            background: linear-gradient(
+                -45deg,
+                #ffcc00, #ddff00
+            );
+        }
+        100% {
+            background: linear-gradient(
+                45deg,
+                #ffcc00, #ddff00
+            );
+        }
     }
 </style>
 

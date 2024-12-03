@@ -1,6 +1,9 @@
 <script>
-    import { fade, scale } from "svelte/transition";
     import "./app.css";
+    import { fade, scale } from "svelte/transition";
+    import { onMount } from "svelte";
+    import { browser } from "$app/environment";
+    import { favoriteStations } from "$lib/store";
     import Map from "./../components/Map.svelte";
     import Title from "../components/Title.svelte";
     import Player from "../components/Player.svelte";
@@ -9,6 +12,7 @@
 
     let showFavourites = false;
     let showSleep = false;
+    let sFavoriteStations = [];
 
     const handleShowFavourites = () => {
         showSleep = false;
@@ -29,6 +33,13 @@
         if (e.target.classList.contains("sleep-container"))
             showSleep = false;
     };
+
+    onMount(() => {
+        if(browser) {
+            sFavoriteStations = localStorage.getItem("favorite") ? JSON.parse(localStorage.getItem("favorite")) : [];
+            favoriteStations.set(sFavoriteStations);
+        }
+    })
 </script>
 
 <div class="container">
