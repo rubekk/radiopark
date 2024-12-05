@@ -1,13 +1,16 @@
 <script>
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
+    import { fade, scale } from "svelte/transition";
     import {
         radioStations,
         currentRadioStation,
         playRadio,
         stationHistory,
         stationLocation,
+        loadingRequest
     } from "$lib/store";
+    import Loading from "./Loading.svelte";
 
     let map;
     let leaflet;
@@ -20,6 +23,7 @@
     let sCurrentRadioStation = {};
     let sStationHistory = [];
     let sStationLocation = { lat: "", lon: "" };
+    let sLoadingRequest = true;
 
     currentRadioStation.subscribe((value) => {
         sCurrentRadioStation = value;
@@ -32,6 +36,10 @@
     stationLocation.subscribe((value) => {
         sStationLocation = value;
     });
+
+    loadingRequest.subscribe(value => {
+        sLoadingRequest = value
+    })
 
     const handleLocateMe = () => {
         if (!browser) return;
@@ -221,6 +229,8 @@
         handleStataionHistory();
         plotLocationOnMap(); 
 
+        setTimeout(() => loadingRequest.set(false), 1000);
+
         const secondBatchResponse = await fetch(
             "https://de1.api.radio-browser.info/json/stations?limit=5000&offset=5000",
         );
@@ -291,6 +301,13 @@
     >
         <i class="fa-solid fa-location-crosshairs"></i>
     </div>
+
+    {#if sLoadingRequest}
+    <div class="loading-container" in:scale={{ duration: 300 }}
+    out:fade={{ duration: 300 }}>
+        <Loading />
+    </div>
+    {/if}
 </div>
 
 <style>
@@ -320,6 +337,13 @@
         right: 0.5rem;
         cursor: pointer;
         z-index: 500;
+    }
+
+    .loading-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1000;
     }
 
     #gradient {

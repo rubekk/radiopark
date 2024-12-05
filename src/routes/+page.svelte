@@ -3,16 +3,43 @@
     import { fade, scale } from "svelte/transition";
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
-    import { favoriteStations } from "$lib/store";
+    import { ref, set, push, onValue, onDisconnect, child } from "firebase/database";
+    import { favoriteStations, loadingRequest } from "$lib/store";
+    import { app, db } from "$lib/firebaseConfig"; 
     import Map from "./../components/Map.svelte";
     import Title from "../components/Title.svelte";
     import Player from "../components/Player.svelte";
     import Favourites from "../components/Favourites.svelte";
     import SleepTimer from "../components/SleepTimer.svelte";
+    import Loading from "../components/Loading.svelte";
 
     let showFavourites = false;
     let showSleep = false;
     let sFavoriteStations = [];
+    let sLoadingRequest = true;
+    let increasedUsers = false;
+    let activeUsers = [];
+    let totalActiveUsers = 0;
+
+    const increaseActive = () => {
+        if(!increasedUsers){
+            const activeRef = ref(db, 'active');
+            const newActiveRef = push(activeRef);
+            
+            
+            set(newActiveRef, {
+                uid: (Date.now() * Math.floor(Math.random() * 25) + 1)
+            })
+            
+            let userId = newActiveRef.key;
+            
+            onDisconnect(ref(db,'active/' + userId)).set({
+                uid: null
+            })
+        }
+        
+        increasedUsers = true;
+    }
 
     const handleShowFavourites = () => {
         showSleep = false;
@@ -34,11 +61,23 @@
             showSleep = false;
     };
 
+    onValue(ref(db, "active"), (snapshot) => {
+        if(snapshot.val()){
+            activeUsers = Object.values(snapshot.val());
+
+            totalActiveUsers = activeUsers.length;
+
+            console.log(totalActiveUsers)
+        }
+    });
+
     onMount(() => {
         if(browser) {
             sFavoriteStations = localStorage.getItem("favorite") ? JSON.parse(localStorage.getItem("favorite")) : [];
             favoriteStations.set(sFavoriteStations);
         }
+
+        increaseActive();
     })
 </script>
 
@@ -46,6 +85,9 @@
     <Map />
     <div class="title">
         <Title />
+    </div>
+    <div class="total-listeners">
+        <i class="fa-solid fa-headphones"></i> {totalActiveUsers} listening
     </div>
     <div class="player">
         <Player />
@@ -105,6 +147,7 @@
     }
 
     .title,
+    .total-listeners,
     .player,
     .favourites,
     .sleep,
@@ -116,6 +159,18 @@
     .title {
         top: .5rem;
         left: .5rem;
+    }
+
+    .total-listeners {
+        font-weight: bold;
+        color: #fff;
+        top: 5rem;
+        left: .5rem;
+    }
+
+    .total-listeners i {
+        margin-right: .25rem;
+        color: rgb(215, 90, 90);
     }
 
     .favourites {
@@ -179,5 +234,17 @@
         border-radius: 3px;
         outline: navajowhite;
         cursor: pointer;
+    }
+
+    /* media queries */
+    @media (max-width: 450px) {
+        .player {
+            bottom: 0;
+            left: 0;
+        }
+
+        .share {
+            bottom: 9.5rem;
+        }
     }
 </style>

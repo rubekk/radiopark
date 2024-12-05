@@ -196,7 +196,7 @@
     .player {
         padding: 1rem;
         width: 350px;
-        background-color: #fff;
+        background-color: #dcdcdc;
         color: #000;
         border: 5px solid #FFCC00;
         border-radius: 3px;
@@ -342,6 +342,15 @@
                 #ffcc00, #dcdcdc, #ddff00
             );
             border-image-slice: 1;
+        }
+    }
+
+    /* media queries */
+    @media (max-width: 450px) {
+        .player {
+            width: 100vw;
+            border: none;
+            border-top: 5px solid #FFCC00;
         }
     }
 </style>
