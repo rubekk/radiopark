@@ -8,7 +8,8 @@
         playRadio,
         stationHistory,
         stationLocation,
-        loadingRequest
+        loadingRequest,
+        darkMode,
     } from "$lib/store";
     import Loading from "./Loading.svelte";
 
@@ -24,6 +25,14 @@
     let sStationHistory = [];
     let sStationLocation = { lat: "", lon: "" };
     let sLoadingRequest = true;
+    let sDarkMode = false;
+    let mapDetails = {
+        map: sDarkMode
+            ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png",
+        fillColor: sDarkMode ? "#fff" : "#000",
+        color: "#797979",
+    };
 
     currentRadioStation.subscribe((value) => {
         sCurrentRadioStation = value;
@@ -37,9 +46,13 @@
         sStationLocation = value;
     });
 
-    loadingRequest.subscribe(value => {
-        sLoadingRequest = value
-    })
+    loadingRequest.subscribe((value) => {
+        sLoadingRequest = value;
+    });
+
+    darkMode.subscribe((value) => {
+        sDarkMode = value;
+    });
 
     const handleLocateMe = () => {
         if (!browser) return;
@@ -108,19 +121,46 @@
         }
     };
 
+    const loadMap = () => {
+        if(!leaflet) return;
+
+        map = leaflet
+            .map("map", {
+                minZoom: 2,
+                zoomControl: false,
+            })
+            .setView([27.7172, 85.324], 5);
+
+        leaflet.control.zoom({ position: "bottomright" }).addTo(map);
+        leaflet
+            .tileLayer(mapDetails.map, {
+                opacity: 0.9,
+            })
+            .addTo(map);
+
+        userLocationMarker = leaflet.layerGroup().addTo(map);
+    };
+
     const plotLocationOnMap = () => {
+        if(!leaflet || !map) return;
+
         sRadioStations.forEach((station, i) => {
             const stationId = `${station.name}-${station.geo_lat}-${station.geo_long}`;
 
-            if (plottedRadioStations && !plottedRadioStations.includes(stationId) && station.geo_lat && station.geo_long) {
+            if (
+                plottedRadioStations &&
+                !plottedRadioStations.includes(stationId) &&
+                station.geo_lat &&
+                station.geo_long
+            ) {
                 const marker = leaflet
-                .circleMarker([station.geo_lat, station.geo_long], {
-                    radius: 3,
-                    fillColor: "#fff",
-                    fillOpacity: 0.9,
-                    weight: 0,
-                })
-                .addTo(map);
+                    .circleMarker([station.geo_lat, station.geo_long], {
+                        radius: 3,
+                        fillColor: mapDetails.fillColor,
+                        fillOpacity: 0.9,
+                        weight: 0,
+                    })
+                    .addTo(map);
 
                 marker.name = station.name;
                 marker.geo_lat = station.geo_lat;
@@ -168,6 +208,8 @@
                 });
 
                 marker.on("click", () => {
+                    playRadio.set(false);
+                    
                     currentRadioStation.set({
                         name: station.name,
                         country: station.country,
@@ -182,32 +224,15 @@
                 });
             }
         });
-    }
+    };
 
     onMount(async () => {
         leaflet = await import("leaflet");
 
-        map = leaflet
-            .map("map", {
-                minZoom: 2,
-                zoomControl: false,
-            })
-            .setView([27.7172, 85.324], 5);
-
-        leaflet.control.zoom({ position: "bottomright" }).addTo(map);
-        leaflet
-            .tileLayer(
-                "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png",
-                {
-                    opacity: 0.8,
-                },
-            )
-            .addTo(map);
-
-        userLocationMarker = leaflet.layerGroup().addTo(map);
+        loadMap();
 
         const globalResponse = await fetch(
-            "https://de1.api.radio-browser.info/json/stations?limit=5000",
+            "https://de1.api.radio-browser.info/json/stations?limit=1000",
         );
         const nepalResponse = await fetch(
             "https://de1.api.radio-browser.info/json/stations/bycountry/Nepal",
@@ -219,7 +244,7 @@
             (station) => station.geo_lat !== null && station.geo_long !== null,
         );
         radioStations.set(sRadioStations);
-        
+
         const fLength = sRadioStations.length;
         let randomNumber = Math.floor(Math.random() * fLength);
 
@@ -227,12 +252,12 @@
         currentRadioStation.set(sCurrentRadioStation);
 
         handleStataionHistory();
-        plotLocationOnMap(); 
+        plotLocationOnMap();
 
         setTimeout(() => loadingRequest.set(false), 1000);
 
         const secondBatchResponse = await fetch(
-            "https://de1.api.radio-browser.info/json/stations?limit=5000&offset=5000",
+            "https://de1.api.radio-browser.info/json/stations?limit=9000&offset=1000",
         );
         const secondBatch = await secondBatchResponse.json();
 
@@ -241,7 +266,7 @@
         );
         sRadioStations = [...sRadioStations, ...newStations];
 
-        plotLocationOnMap(newStations);
+        plotLocationOnMap();
     });
 
     $: {
@@ -258,7 +283,9 @@
                 },
             );
         }
+    }
 
+    $: {
         if (markers && sCurrentRadioStation && sCurrentRadioStation.name) {
             markers.forEach((item) => {
                 if (
@@ -268,9 +295,9 @@
                 ) {
                     item.setStyle({
                         radius: 9,
-                        fillColor: "#ffcc00",
+                        fillColor: "#FFCC00",
                         fillOpacity: 0.9,
-                        color: "#797979",
+                        color: mapDetails.color,
                         weight: 5,
                     });
 
@@ -278,9 +305,9 @@
                 } else {
                     item.setStyle({
                         radius: 3,
-                        fillColor: "#fff",
+                        fillColor: mapDetails.fillColor,
                         fillOpacity: 0.9,
-                        color: "#000",
+                        color: mapDetails.color,
                         weight: 0,
                     });
 
@@ -288,6 +315,22 @@
                 }
             });
         }
+    }
+
+    $: {
+        mapDetails = {
+            map: sDarkMode
+                ? "https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}{r}.png"
+                : "https://{s}.basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png",
+            fillColor: sDarkMode ? "#fff" : "#000",
+            color: "#797979",
+        };
+
+        if(map) map.remove();
+
+        loadMap();
+        plottedRadioStations = [];
+        plotLocationOnMap();
     }
 </script>
 
@@ -303,10 +346,13 @@
     </div>
 
     {#if sLoadingRequest}
-    <div class="loading-container" in:scale={{ duration: 300 }}
-    out:fade={{ duration: 300 }}>
-        <Loading />
-    </div>
+        <div
+            class="loading-container"
+            in:scale={{ duration: 300 }}
+            out:fade={{ duration: 300 }}
+        >
+            <Loading />
+        </div>
     {/if}
 </div>
 

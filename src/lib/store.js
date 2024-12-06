@@ -15,3 +15,5 @@ export const stationLocation = writable({lat: "", lon: ""});
 export const sleepTimer = writable("Keep playing");
 
 export const loadingRequest = writable(true);
+
+export const darkMode = writable(true);

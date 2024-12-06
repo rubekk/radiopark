@@ -3,9 +3,16 @@
     import { fade, scale } from "svelte/transition";
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
-    import { ref, set, push, onValue, onDisconnect, child } from "firebase/database";
-    import { favoriteStations, loadingRequest } from "$lib/store";
-    import { app, db } from "$lib/firebaseConfig"; 
+    import {
+        ref,
+        set,
+        push,
+        onValue,
+        onDisconnect,
+        child,
+    } from "firebase/database";
+    import { app, db } from "$lib/firebaseConfig";
+    import { favoriteStations, loadingRequest, darkMode } from "$lib/store";
     import Map from "./../components/Map.svelte";
     import Title from "../components/Title.svelte";
     import Player from "../components/Player.svelte";
@@ -20,26 +27,30 @@
     let increasedUsers = false;
     let activeUsers = [];
     let totalActiveUsers = 0;
+    let sDarkMode = true;
+
+    darkMode.subscribe((value) => {
+        sDarkMode = value;
+    });
 
     const increaseActive = () => {
-        if(!increasedUsers){
-            const activeRef = ref(db, 'active');
+        if (!increasedUsers) {
+            const activeRef = ref(db, "active");
             const newActiveRef = push(activeRef);
-            
-            
+
             set(newActiveRef, {
-                uid: (Date.now() * Math.floor(Math.random() * 25) + 1)
-            })
-            
+                uid: Date.now() * Math.floor(Math.random() * 25) + 1,
+            });
+
             let userId = newActiveRef.key;
-            
-            onDisconnect(ref(db,'active/' + userId)).set({
-                uid: null
-            })
+
+            onDisconnect(ref(db, "active/" + userId)).set({
+                uid: null,
+            });
         }
-        
+
         increasedUsers = true;
-    }
+    };
 
     const handleShowFavourites = () => {
         showSleep = false;
@@ -57,28 +68,32 @@
     };
 
     const handleSleepOuterClick = (e) => {
-        if (e.target.classList.contains("sleep-container"))
-            showSleep = false;
+        if (e.target.classList.contains("sleep-container")) showSleep = false;
+    };
+
+    const handleMapSwap = (e) => {
+        if(sDarkMode) darkMode.set(false);
+        else darkMode.set(true);
     };
 
     onValue(ref(db, "active"), (snapshot) => {
-        if(snapshot.val()){
+        if (snapshot.val()) {
             activeUsers = Object.values(snapshot.val());
 
             totalActiveUsers = activeUsers.length;
-
-            console.log(totalActiveUsers)
         }
     });
 
     onMount(() => {
-        if(browser) {
-            sFavoriteStations = localStorage.getItem("favorite") ? JSON.parse(localStorage.getItem("favorite")) : [];
+        if (browser) {
+            sFavoriteStations = localStorage.getItem("favorite")
+                ? JSON.parse(localStorage.getItem("favorite"))
+                : [];
             favoriteStations.set(sFavoriteStations);
         }
 
         increaseActive();
-    })
+    });
 </script>
 
 <div class="container">
@@ -87,7 +102,8 @@
         <Title />
     </div>
     <div class="total-listeners">
-        <i class="fa-solid fa-headphones"></i> {totalActiveUsers} listening
+        <i class="fa-solid fa-headphones"></i>
+        <span id={!sDarkMode ? "dark" : ""}>{totalActiveUsers} listening</span>
     </div>
     <div class="player">
         <Player />
@@ -98,8 +114,8 @@
     <div on:click={handleShowSleep} class="sleep">
         <i class="fa-solid fa-moon"></i>
     </div>
-    <div class="share">
-        <i class="fa-solid fa-share"></i>
+    <div on:click={handleMapSwap} class="swap">
+        <i class="fa-solid fa-repeat"></i>
     </div>
 </div>
 
@@ -117,8 +133,12 @@
             <Favourites />
         </div>
 
-        <button on:click={() => showFavourites = false} class="close-btn" in:scale={{ duration: 300 }}
-        out:fade={{ duration: 300 }}>Close</button>
+        <button
+            on:click={() => (showFavourites = false)}
+            class="close-btn"
+            in:scale={{ duration: 300 }}
+            out:fade={{ duration: 300 }}>Close</button
+        >
     </div>
 {/if}
 
@@ -136,8 +156,12 @@
             <SleepTimer />
         </div>
 
-        <button on:click={() => showSleep = false} class="close-btn" in:scale={{ duration: 300 }}
-        out:fade={{ duration: 300 }}>Close</button>
+        <button
+            on:click={() => (showSleep = false)}
+            class="close-btn"
+            in:scale={{ duration: 300 }}
+            out:fade={{ duration: 300 }}>Close</button
+        >
     </div>
 {/if}
 
@@ -151,59 +175,60 @@
     .player,
     .favourites,
     .sleep,
-    .share {
+    .swap {
         position: absolute;
         z-index: 500;
     }
 
     .title {
-        top: .5rem;
-        left: .5rem;
+        top: 0.5rem;
+        left: 0.5rem;
     }
 
     .total-listeners {
         font-weight: bold;
         color: #fff;
         top: 5rem;
-        left: .5rem;
+        left: 0.5rem;
     }
 
     .total-listeners i {
-        margin-right: .25rem;
+        margin-right: 0.25rem;
+        font-weight: bolder;
         color: rgb(215, 90, 90);
     }
 
     .favourites {
         top: 3.5rem;
-        right: .5rem;
+        right: 0.5rem;
     }
 
     .player {
-        bottom: .5rem;
-        left: .5rem;
+        bottom: 0.5rem;
+        left: 0.5rem;
     }
 
     .favourites,
     .sleep,
-    .share {
+    .swap {
         padding: 0.5rem;
         width: 45px;
         font-size: 1.25rem;
         text-align: center;
         color: #fff;
-        background-color: #FFCC00;
+        background-color: #ffcc00;
         border-radius: 3px;
         cursor: pointer;
     }
 
     .sleep {
         top: 6.5rem;
-        right: .5rem;
+        right: 0.5rem;
     }
 
-    .share {
+    .swap {
         bottom: 6rem;
-        right: .5rem;
+        right: 0.5rem;
     }
 
     .favourites-container,
@@ -226,7 +251,7 @@
     }
 
     .close-btn {
-        padding: .5rem 1rem;
+        padding: 0.5rem 1rem;
         margin-top: 1rem;
         background-color: #fff;
         color: #000;
@@ -236,6 +261,10 @@
         cursor: pointer;
     }
 
+    #dark {
+        color: #000;
+    }
+
     /* media queries */
     @media (max-width: 450px) {
         .player {
@@ -243,7 +272,7 @@
             left: 0;
         }
 
-        .share {
+        .swap {
             bottom: 9.5rem;
         }
     }

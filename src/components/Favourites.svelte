@@ -1,5 +1,5 @@
 <script>
-    import { currentRadioStation, favoriteStations } from "$lib/store";
+    import { currentRadioStation, playRadio, favoriteStations } from "$lib/store";
 
     let sCurrentRadioStation = {};
     let sFavoriteStations = [];
@@ -21,8 +21,12 @@
     };
 
     const playFavorite = (i) => {
+        playRadio.set(false);
+        
         sCurrentRadioStation = sFavoriteStations[i];
         currentRadioStation.set(sCurrentRadioStation);
+
+        playRadio.set(true);
     };
 </script>
 

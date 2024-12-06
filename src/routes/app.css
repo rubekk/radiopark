@@ -8,3 +8,10 @@
 body {
     font-family: "Lato", serif;
 }
+
+/* media queries */
+@media (max-width: 450px) {
+    .leaflet-control-zoom, .leaflet-control-attribution {
+        display: none;
+    }
+}
